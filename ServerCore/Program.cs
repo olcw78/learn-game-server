@@ -78,26 +78,24 @@
 // class Reward {
 // }
 
-using System.Security.Cryptography;
-using System.Threading.Channels;
 using ServerCore;
 
 int cnt = 0;
-RWLock _rwLock = new RWLock();
+var rwLock = new RWLock();
 Task t1 = new(() => {
-  for (int i = 0; i < 100_000_000; i++) {
-    _rwLock.WriteLock();
+  for (int i = 0; i < 100_000; i++) {
+    rwLock.WriteLock();
     cnt++;
-    _rwLock.WriteUnlock();
+    rwLock.WriteUnlock();
   }
 });
 Task t2 = new(() => {
-  for (int i = 0; i < 100_000_000; i++) {
-    _rwLock.WriteLock();
-    _rwLock.WriteLock();
+  for (int i = 0; i < 100_000; i++) {
+    rwLock.WriteLock();
+    rwLock.WriteLock();
     cnt--;
-    _rwLock.WriteUnlock();
-    _rwLock.WriteUnlock();
+    rwLock.WriteUnlock();
+    rwLock.WriteUnlock();
   }
 });
 

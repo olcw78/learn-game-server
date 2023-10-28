@@ -4,6 +4,8 @@
 // Write -> Write (o), Write -> Read (o), Read -> Write (x)
 // 2. spinLock policy -> 5000 spin <-> yield
 public class RWLock {
+  private readonly bool _allowRecursive;
+
   private const int EMPTY_FLAG = 0x00000000;
 
   // 7 -> 0 1 1 1 -> 2^2 + 2^1 + 2^0
@@ -15,12 +17,18 @@ public class RWLock {
   private int _flag = EMPTY_FLAG;
   private int _writeCount = 0;
 
+  public RWLock(bool allowRecursive = true) {
+    _allowRecursive = allowRecursive;
+  }
+
   public void WriteLock() {
-    // check the same thread has already acquired WriteLock.
-    int lockThreadId = (_flag & WRITE_MASK) >> 16;
-    if (lockThreadId == Thread.CurrentThread.ManagedThreadId) {
-      _writeCount++;
-      return;
+    if (_allowRecursive) {
+      // check the same thread has already acquired WriteLock.
+      int lockThreadId = (_flag & WRITE_MASK) >> 16;
+      if (lockThreadId == Thread.CurrentThread.ManagedThreadId) {
+        _writeCount++;
+        return;
+      }
     }
 
     int desired = (Thread.CurrentThread.ManagedThreadId << 16) & WRITE_MASK;
@@ -47,10 +55,12 @@ public class RWLock {
   }
 
   public void ReadLock() {
-    int lockThreadId = (_flag & WRITE_MASK) >> 16;
-    if (Thread.CurrentThread.ManagedThreadId == lockThreadId) {
-      Interlocked.Increment(ref _flag);
-      return;
+    if (_allowRecursive) {
+      int lockThreadId = (_flag & WRITE_MASK) >> 16;
+      if (Thread.CurrentThread.ManagedThreadId == lockThreadId) {
+        Interlocked.Increment(ref _flag);
+        return;
+      }
     }
 
     // increase 1 when no one acquires WriteLock.
