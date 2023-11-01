@@ -27,23 +27,28 @@ public class Listener {
         );
 
         _socket.Bind(_endPoint);
+
+        // backlog: 최대 대기수
         _socket.Listen(backlog: DEFAULT_BACKLOG);
 
-        SocketAsyncEventArgs args = new();
-        
-        // ThreadPool 에서 I/O Thread 를 하나 가져와서 Completed Event 를 호출해준다.
-        // if pending == true:
-        args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
-        RegisterAccept(args);
+        // 동접이 많아 pending 이 항상 false 일 경우..
+        for (int i = 0; i < 10; i++) {
+            SocketAsyncEventArgs args = new();
+
+            // ThreadPool 에서 I/O Thread 를 하나 가져와서 Completed Event 를 호출해준다.
+            // if pending == true:
+            args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
+            RegisterAccept(args);
+        }
     }
 
     void RegisterAccept(SocketAsyncEventArgs args) {
-        Console.WriteLine($"Waiting for client...");
+        Console.WriteLine("Waiting for client...");
 
         args.AcceptSocket = null;
 
         bool bPending = _socket.AcceptAsync(args);
-        
+
         // ThreadPool 갈 필요 없이 바로 실행.
         if (!bPending) {
             OnAcceptCompleted(null, args);
