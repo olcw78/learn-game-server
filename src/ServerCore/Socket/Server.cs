@@ -5,46 +5,33 @@ using System.Text;
 namespace ServerCore;
 
 public sealed class Server {
+    const int PORT_NUM = 7777;
+    private readonly Listener _listener;
+
     public Server() {
-        // it didn't work in macOS.
-        // string localHostName = Dns.GetHostName();
-        // IPHostEntry ipHost = Dns.GetHostEntry(localHostName);
-        // IPAddress localAddress = ipHost.AddressList[0];
+        _listener = new Listener(IPAddress.Loopback, PORT_NUM, OnAcceptHandler);
 
-        const int PORT_NUM = 7777;
-        // same as IPAddress.Loopback
-        IPEndPoint endPoint = new(IPAddress.Parse("127.0.0.1"), PORT_NUM);
+        Console.WriteLine("Start Listening...");
+        while (true) {
+        }
+    }
 
-        Socket listenSocket = new(
-            endPoint.AddressFamily,
-            SocketType.Stream,
-            ProtocolType.Tcp
-        );
-
+    static void OnAcceptHandler(Socket connectedClientSocket) {
         try {
-            listenSocket.Bind(endPoint);
-            listenSocket.Listen(backlog: 10);
-
-            while (true) {
-                Console.WriteLine($"Waiting for client...");
-
-                Socket connectedClientSocket = listenSocket.Accept();
-
-                byte[] recvBuffer = new byte[1024];
-                int recvLen = connectedClientSocket.Receive(recvBuffer);
-                if (recvLen > 0) {
-                    string recvStr = Encoding.UTF8.GetString(recvBuffer, 0, recvLen);
-                    if (!string.IsNullOrEmpty(recvStr)) {
-                        Console.WriteLine($"[From Client] {recvStr}");
-                    }
+            byte[] recvBuffer = new byte[1024];
+            int recvLen = connectedClientSocket.Receive(recvBuffer);
+            if (recvLen > 0) {
+                string recvStr = Encoding.UTF8.GetString(recvBuffer, 0, recvLen);
+                if (!string.IsNullOrEmpty(recvStr)) {
+                    Console.WriteLine($"[From Client] {recvStr}");
                 }
-
-                byte[] sendBuffer = Encoding.UTF8.GetBytes("hello it's me. MMORPG Server!");
-                int sendLen = connectedClientSocket.Send(sendBuffer);
-
-                connectedClientSocket.Shutdown(SocketShutdown.Both);
-                connectedClientSocket.Close(timeout: 2000);
             }
+
+            byte[] sendBuffer = Encoding.UTF8.GetBytes("hello it's me. MMORPG Server!");
+            int sendLen = connectedClientSocket.Send(sendBuffer);
+
+            connectedClientSocket.Shutdown(SocketShutdown.Both);
+            connectedClientSocket.Close(timeout: 2000);
         }
         catch (Exception e) {
             Console.WriteLine(e.Message);
