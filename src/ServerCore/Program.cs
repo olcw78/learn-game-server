@@ -78,29 +78,31 @@
 // class Reward {
 // }
 
-using ServerCore;
+// using ServerCore;
 
-int cnt = 0;
-var rwLock = new RWLock();
-Task t1 = new(() => {
-  for (int i = 0; i < 100_000; i++) {
-    rwLock.WriteLock();
-    cnt++;
-    rwLock.WriteUnlock();
-  }
-});
-Task t2 = new(() => {
-  for (int i = 0; i < 100_000; i++) {
-    rwLock.WriteLock();
-    rwLock.WriteLock();
-    cnt--;
-    rwLock.WriteUnlock();
-    rwLock.WriteUnlock();
-  }
-});
+// int cnt = 0;
+// var rwLock = new RWLock();
+// Task t1 = new(() => {
+//   for (int i = 0; i < 100_000; i++) {
+//     rwLock.WriteLock();
+//     cnt++;
+//     rwLock.WriteUnlock();
+//   }
+// });
+// Task t2 = new(() => {
+//   for (int i = 0; i < 100_000; i++) {
+//     rwLock.WriteLock();
+//     rwLock.WriteLock();
+//     cnt--;
+//     rwLock.WriteUnlock();
+//     rwLock.WriteUnlock();
+//   }
+// });
 
-t1.Start();
-t2.Start();
-Task.WaitAll(t1, t2);
+// t1.Start();
+// t2.Start();
+// Task.WaitAll(t1, t2);
 
-Console.Write(cnt);
+// Console.Write(cnt);
+
+ServerCore.Server server = new();
